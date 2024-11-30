@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo Categorization</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+function App() {
+    const [todos, setTodos] = useState([]);
+    const [parents, setParents] = useState([]);
+    const [selectedParentId, setSelectedParentId] = useState(null);
+
+    useEffect(() => {
+        fetch('https://jsonplaceholder.typicode.com/todos')
+            .then(response => response.json())
+            .then(data => {
+                setTodos(data);
+                const primeIds = data.filter(todo => isPrime(todo.id)).map(todo => todo.id);
+                setParents(primeIds);
+            });
+    }, []);
+
+    const isPrime = (num) => {
+        if (num < 2) return false;
+        for (let i = 2; i <= Math.sqrt(num); i++) {
+            if (num % i === 0) return false;
+        }
+        return true;
+    };
+
+    const getChildren = (parentId) => {
+        const parentIndex = parents.indexOf(parentId);
+        const nextParentId = parents[parentIndex + 1];
+        return todos.filter(todo => 
+            !isPrime(todo.id) &&
+            todo.id > parentId &&
+            (nextParentId ? todo.id < nextParentId : todo.id > parentId)
+        );
+    };
+
+    const handleParentClick = (id) => {
+        setSelectedParentId(id === selectedParentId ? null : id);
+    };
+
+    const toggleComplete = (id) => {
+        setTodos(todos.map(todo => 
+            todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        ));
+        fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ completed: !todos.find(todo => todo.id === id).completed }),
+        });
+    };
+
+    return (
+        <div>
+            <h1>Todo Categorization</h1>
+            <ul>
+                {parents.map(parentId => (
+                    <li key={parentId}>
+                        <span 
+                            style={{ cursor: 'pointer', fontWeight: 'bold' }}
+                            onClick={() => handleParentClick(parentId)}
+                        >
+                            {parentId}. {todos.find(todo => todo.id === parentId)?.title}
+                        </span>
+                        {selectedParentId === parentId && (
+                            <ul>
+                                {getChildren(parentId).map(child => (
+                                    <li 
+                                        key={child.id}
+                                        onClick={() => toggleComplete(child.id)}
+                                        style={{ 
+                                            cursor: 'pointer',
+                                            textDecoration: child.completed ? 'line-through' : 'none'
+                                        }}
+                                    >
+                                        {child.id}. {child.title}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
