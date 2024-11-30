@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Todo Categorization Tests</title>
+</head>
+<body>
+    <h1>Todo Categorization Unit Tests</h1>
+    <div id="test-results"></div>
+    <script type="text/javascript">
+        // Simple test framework
+        function assertEqual(actual, expected, testName) {
+            const resultDiv = document.getElementById('test-results');
+            const result = document.createElement('div');
+            if (actual === expected) {
+                result.style.color = 'green';
+                result.textContent = `✔️ ${testName}: Passed`;
+            } else {
+                result.style.color = 'red';
+                result.textContent = `❌ ${testName}: Failed (Expected ${expected}, got ${actual})`;
+            }
+            resultDiv.appendChild(result);
+        }
+
+        // Function to test
+        function isPrime(num) {
+            if (num < 2) return false;
+            for (let i = 2; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) return false;
+            }
+            return true;
+        }
+
+        // Test cases for isPrime
+        assertEqual(isPrime(1), false, 'isPrime(1) should return false');
+        assertEqual(isPrime(2), true, 'isPrime(2) should return true');
+        assertEqual(isPrime(3), true, 'isPrime(3) should return true');
+        assertEqual(isPrime(4), false, 'isPrime(4) should return false');
+        assertEqual(isPrime(17), true, 'isPrime(17) should return true');
+        assertEqual(isPrime(20), false, 'isPrime(20) should return false');
+
+        // Function to get children todos
+        function getChildren(todos, parents, parentId) {
+            const parentIndex = parents.indexOf(parentId);
+            const nextParentId = parents[parentIndex + 1];
+            return todos.filter(todo => 
+                !isPrime(todo.id) &&
+                todo.id > parentId &&
+                (nextParentId ? todo.id < nextParentId : todo.id > parentId)
+            );
+        }
+
+        // Mock data
+        const mockTodos = [
+            { id: 1, title: 'Todo 1', completed: false },
+            { id: 2, title: 'Todo 2', completed: false },
+            { id: 3, title: 'Todo 3', completed: false },
+            { id: 4, title: 'Todo 4', completed: false },
+            { id: 5, title: 'Todo 5', completed: false },
+            { id: 6, title: 'Todo 6', completed: false },
+            { id: 7, title: 'Todo 7', completed: false },
+            { id: 8, title: 'Todo 8', completed: false },
+            { id: 9, title: 'Todo 9', completed: false },
+            { id: 10, title: 'Todo 10', completed: false }
+        ];
+
+        const mockParents = [2, 3, 5, 7];
+
+        // Expected children
+        const expectedChildrenFor3 = [{ id: 4, title: 'Todo 4', completed: false }];
+
+        // Test getChildren
+        const childrenFor3 = getChildren(mockTodos, mockParents, 3);
+        const childrenEqual = JSON.stringify(childrenFor3) === JSON.stringify(expectedChildrenFor3);
+        assertEqual(childrenEqual, true, 'getChildren for parentId 3 should return Todo 4');
+
+        // Additional tests can be added similarly
+    </script>
+</body>
+</html>
